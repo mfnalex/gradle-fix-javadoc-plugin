@@ -26,9 +26,10 @@ abstract class FixJavadocPlugin : Plugin<Project> {
 
     private fun addFixJavadocTaskToJavadocTask(project: Project, javadocTask: Javadoc) {
         val fixJavadocTaskName = "fix" + javadocTask.name.uppercaseFirstLetter()
-        val createdTask: FixJavadocTask = project.tasks.create(fixJavadocTaskName, FixJavadocTask::class.java, javadocTask)
+        val createdTask: FixJavadoc = project.tasks.create(fixJavadocTaskName, FixJavadoc::class.java, javadocTask)
         createdTask.group = "documentation"
         createdTask.description = "Fixes output of " + javadocTask.name
+        createdTask.dependsOn(javadocTask)
         javadocTask.finalizedBy(createdTask)
     }
 
