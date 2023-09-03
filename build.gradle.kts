@@ -8,13 +8,14 @@ plugins {
 }
 
 group = "com.jeff-media"
-version = "1.5"
+version = "1.6"
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
+    implementation("org.jsoup:jsoup:1.16.1")
     testImplementation(kotlin("test"))
 }
 
