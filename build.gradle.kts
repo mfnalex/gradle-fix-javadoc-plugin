@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     kotlin("jvm") version "1.9.0"
     `kotlin-dsl`
@@ -6,7 +8,7 @@ plugins {
 }
 
 group = "com.jeff-media"
-version = "1.0"
+version = "1.1"
 
 repositories {
     mavenCentral()
@@ -41,5 +43,14 @@ gradlePlugin {
 publishing {
     repositories {
         mavenLocal()
+        maven {
+            url = uri("https://repo.jeff-media.com/public")
+            //val jeffMediaPublicUser=
+
+            credentials {
+                username = properties.get("jeffMediaPublicUser") as String
+                password = properties.get("jeffMediaPublicPassword") as String
+            }
+        }
     }
 }
