@@ -18,10 +18,10 @@ class FileFixer(private val file: File) {
 
     fun fixAll() {
         document.outputSettings().prettyPrint(false)
-        fixFieldDetails()
-        fixConstructorDetails()
-        fixMethodParameters()
-        //fixMethodReturnTypes() // TODO: This breaks e.g. List<@NotNull String> and returns just String> instead
+//        fixFieldDetails()
+//        fixConstructorDetails()
+//        fixMethodParameters()
+        fixMethodReturnTypes() // TODO: This breaks e.g. List<@NotNull String> and returns just String> instead
         file.writeText(document.html(), StandardCharsets.UTF_8)
     }
 
