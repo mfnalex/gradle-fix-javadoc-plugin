@@ -2,7 +2,7 @@ This is a gradle plugin to automatically remove doubled annotations caused by, f
 
 ## What does this do?
 
-Imagine you have the following code:
+Imagine you have the following code, using jetbrains annotations (**not** annotations-java5):
 
 ```java
 import org.jetbrains.annotations.NotNull;
