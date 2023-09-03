@@ -25,10 +25,10 @@ abstract class FixJavadocPlugin : Plugin<Project> {
     }
 
     private fun addFixJavadocTaskToJavadocTask(project: Project, javadocTask: Javadoc) {
-        val fixJavadocTaskName = "fix" + javadocTask.name.uppercaseFirstLetter()
+        val fixJavadocTaskName = javadocTask.name + "FixDuplicatedAnnotations"
         val createdTask: FixJavadoc = project.tasks.create(fixJavadocTaskName, FixJavadoc::class.java, javadocTask)
         createdTask.group = "documentation"
-        createdTask.description = "Fixes output of " + javadocTask.name
+        createdTask.description = "Removes duplicated annotations created by " + javadocTask.name
         createdTask.dependsOn(javadocTask)
         javadocTask.finalizedBy(createdTask)
     }
