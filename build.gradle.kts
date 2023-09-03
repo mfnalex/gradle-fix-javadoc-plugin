@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "com.jeff-media"
-version = "1.1"
+version = "1.4"
 
 repositories {
     mavenCentral()
@@ -45,7 +45,6 @@ publishing {
         mavenLocal()
         maven {
             url = uri("https://repo.jeff-media.com/public")
-            //val jeffMediaPublicUser=
 
             credentials {
                 username = properties.get("jeffMediaPublicUser") as String
