@@ -7,8 +7,11 @@ import org.gradle.api.tasks.javadoc.Javadoc
 import java.io.File
 import javax.inject.Inject
 
-val REGEX_DUPLICATED_LINK = "(?<firstLink><a .*?>.*?<\\/a>)\\s*\\k<firstLink>".toRegex()
-val REGEX_DOUBLE_ANNOTATION = "(?<annotation>@[A-Za-z.]+)\\s+\\k<annotation>\\s+".toRegex()
+val REGEX_STRING_VALID_ANNOTATION_NAME= "@[A-Za-z_.]+"
+val REGEX_DUPLICATED_LINK = "(?<keep><a .*?>${REGEX_STRING_VALID_ANNOTATION_NAME}<\\/a>)\\s*\\k<keep>".toRegex()
+val REGEX_DOUBLE_ANNOTATION_IN_PARAMETERS = "(?<keep>${REGEX_STRING_VALID_ANNOTATION_NAME})\\s+\\k<keep>\\s+".toRegex()
+val REGEX_DOUBLE_ANNOTATION_BEFORE_RETURN = "(?<keep><span class=\"return-type\">)(?<links>(<a .*?>@[a-zA-Z0-9._]+<\\/a>)+)".toRegex()
+val REGEX_NBSP_BETWEEN_MODIFIERS_AND_RETURN_TYPE = "(?<before><span class=\"modifiers\">.*?<\\/span>)&nbsp;(?<after><span class=\"return-type\">)".toRegex()
 
 abstract class FixJavadoc @Inject constructor(@Input val task: Javadoc) : DefaultTask() {
 
@@ -24,6 +27,9 @@ abstract class FixJavadoc @Inject constructor(@Input val task: Javadoc) : Defaul
             return
         }
 
+        val directoryOriginal = File(directory.absolutePath + "_original")
+        directory.copyRecursively(directoryOriginal, true)
+
         directory
             .walk()
             .filter { file -> file.extension.lowercase() == "html" }
@@ -34,29 +40,32 @@ abstract class FixJavadoc @Inject constructor(@Input val task: Javadoc) : Defaul
     private fun replace(file: File) {
         var content = file.readText()
 
-        if (REGEX_DOUBLE_ANNOTATION.containsMatchIn(content) || REGEX_DUPLICATED_LINK.containsMatchIn(content)) {
-            val foundMatches =
-                countMatches(content, REGEX_DOUBLE_ANNOTATION) + countMatches(content, REGEX_DUPLICATED_LINK)
+        if (REGEX_DOUBLE_ANNOTATION_IN_PARAMETERS.containsMatchIn(content)
+            || REGEX_DUPLICATED_LINK.containsMatchIn(content)
+            || REGEX_DOUBLE_ANNOTATION_BEFORE_RETURN.containsMatchIn(content)) {
             content = removeDuplicatedLinks(content)
             content = removeDuplicatedAnnotations(content)
+            content = removeDuplicatedAnnotationsBeforeReturn(content)
+            content = removeNbspBetweenModifiersAndReturnType(content)
             file.writeText(content)
-            //if(!silent) {
-            //   val rootFile = file.relativeTo(project.rootDir)
-            //   println("Removed $foundMatches duplicate annotations in ${rootFile.path}")
 
         }
     }
 
-    private fun countMatches(input: String, regex: Regex): Int {
-        return regex.findAll(input).count()
-    }
-
     private fun removeDuplicatedLinks(input: String): String {
-        return input.replace(REGEX_DUPLICATED_LINK, "\${firstLink}")
+        return input.replace(REGEX_DUPLICATED_LINK, "\${keep}")
     }
 
     private fun removeDuplicatedAnnotations(input: String): String {
-        return input.replace(REGEX_DOUBLE_ANNOTATION, "\${annotation} ")
+        return input.replace(REGEX_DOUBLE_ANNOTATION_IN_PARAMETERS, "\${keep} ")
+    }
+
+    private fun removeDuplicatedAnnotationsBeforeReturn(input: String): String {
+        return input.replace(REGEX_DOUBLE_ANNOTATION_BEFORE_RETURN, "\${keep}")
+    }
+
+    private fun removeNbspBetweenModifiersAndReturnType(input: String): String {
+        return input.replace(REGEX_NBSP_BETWEEN_MODIFIERS_AND_RETURN_TYPE, "\${before}\${after}")
     }
 
 
