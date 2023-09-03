@@ -18,51 +18,52 @@ class FileFixer(private val file: File) {
         document.outputSettings().prettyPrint(false)
         fixFieldDetails()
         fixConstructorDetails()
-//        File(file.parent, file.nameWithoutExtension + ".fixed.html").writeText(document.outerHtml(), StandardCharsets.UTF_8)
-//        fixFieldDetails()
+        fixMethodParameters()
+        fixMethodReturnTypes()
         file.writeText(document.html(), StandardCharsets.UTF_8)
     }
 
     private fun fixFieldDetails() {
-        println("Processing field details...")
-        val allSignatures: Elements? = document.getElementById("field-detail")?.getElementsByClass("member-signature")
-        if(allSignatures == null) {
-            println("No fields found.")
-            return // No fields
-        }
+        val allSignatures: Elements = document.getElementById("field-detail")?.getElementsByClass("member-signature")
+            ?: return // No fields
         for (signature in allSignatures) {
-            println("Found field " + signature.getElementsByClass("element-name").first()?.text())
             val listOfAnnotations: List<String> = collectAnnotations(signature.getElementsByClass("annotations").first())
-            println("  Found annotations: $listOfAnnotations")
+            val returnTypeElement: Element? = signature.getElementsByClass("return-type").first()
+            removeDoubleAnnotations(returnTypeElement, listOfAnnotations)
+        }
+    }
+
+    private fun fixMethodReturnTypes() {
+        val allSignatures: Elements = document.getElementById("method-detail")?.getElementsByClass("member-signature")
+            ?: return // No fields
+        for (signature in allSignatures) {
+            val listOfAnnotations: List<String> = collectAnnotations(signature.getElementsByClass("annotations").first())
             val returnTypeElement: Element? = signature.getElementsByClass("return-type").first()
             removeDoubleAnnotations(returnTypeElement, listOfAnnotations)
         }
     }
 
     private fun fixConstructorDetails() {
-        println("Processing constructor details...")
-        val allSignatures: Elements? = document.getElementById("constructor-detail")?.getElementsByClass("member-signature")
-        if(allSignatures == null) {
-            println("No fields found.")
-            return // No fields
-        }
-        for (signature in allSignatures) {
-            println("Found field " + signature.getElementsByClass("element-name").first()?.text())
-            val parametersElement = signature.getElementsByClass("parameters").first()
-            var parametersHtml = parametersElement?.html()
-            if(parametersHtml == null) continue
-            println("Found inner html: " + parametersHtml)
-            println("Regex matches: " + REGEX_DOUBLE_ANNOTATION_IN_PARAMETER.containsMatchIn(parametersHtml))
-            parametersHtml = parametersHtml?.replace(REGEX_DOUBLE_ANNOTATION_IN_PARAMETER, "\${annotation}")
-            if(parametersHtml != null) {
-                parametersElement?.html(parametersHtml)
-            }
+        val allSignatures: Elements = document.getElementById("constructor-detail")?.getElementsByClass("member-signature")
+            ?: return // No fields
+        fixSignatures(allSignatures)
+    }
 
-            //val listOfAnnotations: List<String> = collectAnnotations(signature.getElementsByClass("parameters").first())
-            //println("  Found annotations: $listOfAnnotations")
-            //val returnTypeElement: Element? = signature.getElementsByClass("return-type").first()
-            //removeDoubleAnnotations(returnTypeElement, listOfAnnotations)
+    private fun fixSignatures(allSignatures: Elements) {
+        for (signature in allSignatures) {
+            val parametersElement = signature.getElementsByClass("parameters").first()
+            var parametersHtml: String? = parametersElement?.html() ?: continue
+            parametersHtml = parametersHtml?.replace(REGEX_DOUBLE_ANNOTATION_IN_PARAMETER, "\${annotation}")
+            if (parametersHtml != null) {
+                parametersElement.html(parametersHtml)
+            }
         }
+    }
+
+    private fun fixMethodParameters() {
+        val allSignatures: Elements = document.getElementById("method-detail")?.getElementsByClass("member-signature")
+            ?: return // No fields
+        fixSignatures(allSignatures)
     }
 
     private fun getAnnotationRegex(annotation: String): Regex {
@@ -79,14 +80,7 @@ class FileFixer(private val file: File) {
             html = html.replace("$annotation ", "")
             returnTypeElement.html(html)
         }
-//        for(annotation in listOfAnnotations) {
-//            val annotationElement: Element? = returnTypeElement.getElementsByTag("a").firstOrNull { it.text() == annotation }
-//            if(annotationElement == null) {
-//                returnTypeElement.text(returnTypeElement.text().replace("$annotation ", ""))
-//            } else {
-//                annotationElement.remove()
-//            }
-//        }
+
     }
 
     private fun collectAnnotations(element: Element?): List<String> {
