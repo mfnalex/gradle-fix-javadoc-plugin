@@ -8,7 +8,9 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 
 //private val REGEX_DOUBLE_ANNOTATION = "(?<annotation>@[a-zA-Z0-9._]+)\\s+\\k<annotation>".toRegex()
-private val REGEX_DOUBLE_ANNOTATION_IN_PARAMETER = "(?<annotation>(<a .*>)?@[a-zA-Z0-9._]+(</a>)?)\\s*\\k<annotation>".toRegex()
+private val REGEX_VALID_ANNOTATION_STRING = "@[a-zA-Z0-9._]+"
+private val REGEX_VALID_ANNOTATION = REGEX_VALID_ANNOTATION_STRING.toRegex()
+private val REGEX_DOUBLE_ANNOTATION_IN_PARAMETER = "(?<annotation>(<a .*>)?${REGEX_VALID_ANNOTATION_STRING}(</a>)?)\\s*\\k<annotation>".toRegex()
 
 class FileFixer(private val file: File) {
 
@@ -19,7 +21,7 @@ class FileFixer(private val file: File) {
         fixFieldDetails()
         fixConstructorDetails()
         fixMethodParameters()
-        fixMethodReturnTypes()
+        //fixMethodReturnTypes() // TODO: This breaks e.g. List<@NotNull String> and returns just String> instead
         file.writeText(document.html(), StandardCharsets.UTF_8)
     }
 
@@ -37,6 +39,7 @@ class FileFixer(private val file: File) {
         val allSignatures: Elements = document.getElementById("method-detail")?.getElementsByClass("member-signature")
             ?: return // No fields
         for (signature in allSignatures) {
+            println("Found signature: $signature")
             val listOfAnnotations: List<String> = collectAnnotations(signature.getElementsByClass("annotations").first())
             val returnTypeElement: Element? = signature.getElementsByClass("return-type").first()
             removeDoubleAnnotations(returnTypeElement, listOfAnnotations)
@@ -67,18 +70,28 @@ class FileFixer(private val file: File) {
     }
 
     private fun getAnnotationRegex(annotation: String): Regex {
-        return "<a .*?>$annotation</a> ".toRegex()
+        println("Getting annotation regex for $annotation")
+        val escaped = Regex.escape(annotation)
+        return "<a .*?>$escaped</a> ".toRegex()
     }
 
     private fun removeDoubleAnnotations(returnTypeElement: Element?, listOfAnnotations: List<String>) {
         if(returnTypeElement == null) {
             return
         }
+        println("Remove double annotation: " + returnTypeElement.html())
         var html = returnTypeElement.html()
         for(annotation in listOfAnnotations) {
-            html = html.replace(getAnnotationRegex(annotation), "")
-            html = html.replace("$annotation ", "")
-            returnTypeElement.html(html)
+            println("Found annotation: " + annotation)
+            if(!REGEX_VALID_ANNOTATION.matches(annotation)) {
+                println("Invalid annotation: $annotation")
+                continue
+            } else {
+                println("Valid annotation: $annotation")
+                html = html.replace(getAnnotationRegex(annotation), "")
+                html = html.replace("$annotation ", "")
+                returnTypeElement.html(html)
+            }
         }
 
     }
