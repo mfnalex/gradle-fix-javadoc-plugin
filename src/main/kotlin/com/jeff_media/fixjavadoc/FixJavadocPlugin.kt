@@ -8,7 +8,6 @@ import org.gradle.api.tasks.javadoc.Javadoc
 abstract class FixJavadocPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
-
         project.afterEvaluate {
             tasks
                 .withType(Javadoc::class.java)
@@ -21,7 +20,6 @@ abstract class FixJavadocPlugin : Plugin<Project> {
                 apply(subproject)
             }
         }
-
     }
 
     private fun addFixJavadocTaskToJavadocTask(project: Project, javadocTask: Javadoc) {

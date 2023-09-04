@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.jeff-media"
-version = "1.11"
+version = "1.13"
 
 repositories {
     mavenCentral()
