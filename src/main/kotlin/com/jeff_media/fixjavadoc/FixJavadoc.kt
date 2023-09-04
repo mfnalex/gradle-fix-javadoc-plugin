@@ -36,7 +36,7 @@ abstract class FixJavadoc @Inject constructor(@Input val task: Javadoc) : Defaul
             return
         }
 
-        if(keepOriginal.get()) {
+        if (keepOriginal.get()) {
             val original = File(directory.parent, directory.name + "-original")
             directory.copyRecursively(original, true)
         }

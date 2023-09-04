@@ -1,5 +1,3 @@
-import java.util.Properties
-
 plugins {
     kotlin("jvm") version "1.9.0"
     `kotlin-dsl`

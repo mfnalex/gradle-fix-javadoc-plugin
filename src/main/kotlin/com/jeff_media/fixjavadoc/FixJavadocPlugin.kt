@@ -16,7 +16,7 @@ abstract class FixJavadocPlugin : Plugin<Project> {
                     addFixJavadocTaskToJavadocTask(this, javadocTask)
                 }
 
-            childProjects.forEach {entry ->
+            childProjects.forEach { entry ->
                 val subproject: Project = entry.value
                 apply(subproject)
             }

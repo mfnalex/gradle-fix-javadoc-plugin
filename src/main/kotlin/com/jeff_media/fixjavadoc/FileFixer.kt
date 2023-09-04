@@ -7,10 +7,10 @@ import org.jsoup.select.Elements
 import java.io.File
 import java.nio.charset.StandardCharsets
 
-//private val REGEX_DOUBLE_ANNOTATION = "(?<annotation>@[a-zA-Z0-9._]+)\\s+\\k<annotation>".toRegex()
 private val REGEX_VALID_ANNOTATION_STRING = "@[a-zA-Z0-9._]+"
 private val REGEX_VALID_ANNOTATION = REGEX_VALID_ANNOTATION_STRING.toRegex()
-private val REGEX_DOUBLE_ANNOTATION_IN_PARAMETER = "(?<annotation>(<a .*>)?${REGEX_VALID_ANNOTATION_STRING}(</a>)?)\\s*\\k<annotation>".toRegex()
+private val REGEX_DOUBLE_ANNOTATION_IN_PARAMETER =
+    "(?<annotation>(<a .*>)?${REGEX_VALID_ANNOTATION_STRING}(</a>)?)\\s*\\k<annotation>".toRegex()
 
 class FileFixer(private val file: File, private val addNewLineForMethodParams: Boolean) {
 
@@ -29,17 +29,20 @@ class FileFixer(private val file: File, private val addNewLineForMethodParams: B
         val allSignatures: Elements = document.getElementById("field-detail")?.getElementsByClass("member-signature")
             ?: return // No fields
         for (signature in allSignatures) {
-            val listOfAnnotations: List<String> = collectAnnotations(signature.getElementsByClass("annotations").first())
+            val listOfAnnotations: List<String> =
+                collectAnnotations(signature.getElementsByClass("annotations").first())
             val returnTypeElement: Element? = signature.getElementsByClass("return-type").first()
             removeDoubleAnnotations(returnTypeElement, listOfAnnotations)
         }
     }
 
     private fun fixMethodReturnTypes() {
-        val allSignatures: Elements = document.getElementById("method-detail")?.getElementsByClass("member-signature") ?: return
+        val allSignatures: Elements =
+            document.getElementById("method-detail")?.getElementsByClass("member-signature") ?: return
         for (signature in allSignatures) {
             //println("Found signature: $signature\n\n\n")
-            val listOfAnnotations: List<String> = collectAnnotations(signature.getElementsByClass("annotations").first())
+            val listOfAnnotations: List<String> =
+                collectAnnotations(signature.getElementsByClass("annotations").first())
             //println("List of annotations: $listOfAnnotations\n\n\n")
             val returnTypeElement: Element? = signature.getElementsByClass("return-type").first()
             //println("Return type element: $returnTypeElement\n\n\n")
@@ -48,9 +51,16 @@ class FileFixer(private val file: File, private val addNewLineForMethodParams: B
     }
 
     private fun fixConstructorDetails() {
-        val allSignatures: Elements = document.getElementById("constructor-detail")?.getElementsByClass("member-signature")
-            ?: return // No fields
+        val allSignatures: Elements =
+            document.getElementById("constructor-detail")?.getElementsByClass("member-signature")
+                ?: return // No fields
         fixSignatures(allSignatures)
+    }
+
+    private fun fixMethodParameters(addNewLineForMethodParams: Boolean) {
+        val allSignatures: Elements = document.getElementById("method-detail")?.getElementsByClass("member-signature")
+            ?: return // No fields
+        fixSignatures(allSignatures, addNewLineForMethodParams)
     }
 
     private fun fixSignatures(allSignatures: Elements) {
@@ -62,17 +72,12 @@ class FileFixer(private val file: File, private val addNewLineForMethodParams: B
             val parametersElement = signature.getElementsByClass("parameters").first()
             var parametersHtml: String? = parametersElement?.html() ?: continue
             val newlineChar = if (newline) "\n" else ""
-            parametersHtml = parametersHtml?.replace(REGEX_DOUBLE_ANNOTATION_IN_PARAMETER, "\${annotation}${newlineChar}")
+            parametersHtml =
+                parametersHtml?.replace(REGEX_DOUBLE_ANNOTATION_IN_PARAMETER, "\${annotation}${newlineChar}")
             if (parametersHtml != null) {
                 parametersElement.html(parametersHtml)
             }
         }
-    }
-
-    private fun fixMethodParameters(addNewLineForMethodParams: Boolean) {
-        val allSignatures: Elements = document.getElementById("method-detail")?.getElementsByClass("member-signature")
-            ?: return // No fields
-        fixSignatures(allSignatures, addNewLineForMethodParams)
     }
 
     private fun getAnnotationRegex(annotation: String): Regex {
@@ -85,14 +90,14 @@ class FileFixer(private val file: File, private val addNewLineForMethodParams: B
     }
 
     private fun removeDoubleAnnotations(returnTypeElement: Element?, listOfAnnotations: List<String>) {
-        if(returnTypeElement == null) {
+        if (returnTypeElement == null) {
             return
         }
         var html = returnTypeElement.html()
         //println("HTML: $html\n\n\n")
-        for(annotation in listOfAnnotations) {
+        for (annotation in listOfAnnotations) {
             //println("Found annotation: " + annotation + "\n\n\n")
-            if(!REGEX_VALID_ANNOTATION.matches(annotation)) {
+            if (!REGEX_VALID_ANNOTATION.matches(annotation)) {
                 //println("Invalid annotation: $annotation")
                 continue
             } else {
@@ -111,7 +116,7 @@ class FileFixer(private val file: File, private val addNewLineForMethodParams: B
     private fun collectAnnotations(element: Element?): List<String> {
         val list = ArrayList<String>()
 
-        if(element == null) {
+        if (element == null) {
             return list
         }
 
