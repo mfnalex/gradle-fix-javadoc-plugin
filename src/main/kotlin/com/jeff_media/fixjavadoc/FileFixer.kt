@@ -20,8 +20,8 @@ class FileFixer(private val file: File, private val addNewLineForMethodParams: B
         document.outputSettings().prettyPrint(false)
         fixFieldDetails()
         fixConstructorDetails()
-        fixMethodParameters()
-        fixMethodReturnTypes() // TODO: This breaks e.g. List<@NotNull String> and returns just String> instead
+        fixMethodParameters(addNewLineForMethodParams)
+        fixMethodReturnTypes()
         file.writeText(document.html(), StandardCharsets.UTF_8)
     }
 
@@ -61,7 +61,7 @@ class FileFixer(private val file: File, private val addNewLineForMethodParams: B
         for (signature in allSignatures) {
             val parametersElement = signature.getElementsByClass("parameters").first()
             var parametersHtml: String? = parametersElement?.html() ?: continue
-            val newlineChar = if (newline && addNewLineForMethodParams) "\n" else ""
+            val newlineChar = if (newline) "\n" else ""
             parametersHtml = parametersHtml?.replace(REGEX_DOUBLE_ANNOTATION_IN_PARAMETER, "\${annotation}${newlineChar}")
             if (parametersHtml != null) {
                 parametersElement.html(parametersHtml)
@@ -69,10 +69,10 @@ class FileFixer(private val file: File, private val addNewLineForMethodParams: B
         }
     }
 
-    private fun fixMethodParameters() {
+    private fun fixMethodParameters(addNewLineForMethodParams: Boolean) {
         val allSignatures: Elements = document.getElementById("method-detail")?.getElementsByClass("member-signature")
             ?: return // No fields
-        fixSignatures(allSignatures, true)
+        fixSignatures(allSignatures, addNewLineForMethodParams)
     }
 
     private fun getAnnotationRegex(annotation: String): Regex {
