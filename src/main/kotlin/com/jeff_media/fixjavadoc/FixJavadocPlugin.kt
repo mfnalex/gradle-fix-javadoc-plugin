@@ -2,33 +2,40 @@ package com.jeff_media.fixjavadoc
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.javadoc.Javadoc
+import org.gradle.kotlin.dsl.register
+import org.gradle.kotlin.dsl.withType
 
 
 abstract class FixJavadocPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         project.afterEvaluate {
-            tasks
-                .withType(Javadoc::class.java)
-                .forEach { javadocTask ->
-                    addFixJavadocTaskToJavadocTask(this, javadocTask)
-                }
+            val rootProject: Project = this@afterEvaluate
+            tasks.withType<Javadoc>().all {
+                val originalJavadocTask: Javadoc = this@all
+                registerFixTask(rootProject, originalJavadocTask)
+            }
 
-            childProjects.forEach { entry ->
-                val subproject: Project = entry.value
-                apply(subproject)
+            subprojects {
+                val subproject: Project = this@subprojects
+                tasks.withType<Javadoc>().all {
+                    val originalJavadocTask: Javadoc = this@all
+                    registerFixTask(subproject, originalJavadocTask)
+                }
             }
         }
     }
 
-    private fun addFixJavadocTaskToJavadocTask(project: Project, javadocTask: Javadoc) {
-        val fixJavadocTaskName = javadocTask.name + "FixDuplicatedAnnotations"
-        val createdTask: FixJavadoc = project.tasks.create(fixJavadocTaskName, FixJavadoc::class.java, javadocTask)
-        createdTask.group = "documentation"
-        createdTask.description = "Removes duplicated annotations created by " + javadocTask.name
-        createdTask.dependsOn(javadocTask)
-        javadocTask.finalizedBy(createdTask)
-    }
+    private fun registerFixTask(project: Project, originalJavadocTask: Javadoc) {
+        val createdTask: TaskProvider<FixJavadoc> = project.tasks.register<FixJavadoc>(originalJavadocTask.name + "FixDuplicatedAnnotations") {
+            group = "documentation"
+            description = "Removes duplicated annotations created by $name"
+            dependsOn(originalJavadocTask)
+            javadocTask.set(originalJavadocTask)
+        }
+        originalJavadocTask.finalizedBy(createdTask)
 
+    }
 }

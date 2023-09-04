@@ -8,10 +8,12 @@ import org.gradle.api.tasks.javadoc.Javadoc
 import java.io.File
 import java.lang.IllegalStateException
 import java.nio.charset.StandardCharsets
-import javax.inject.Inject
 
 
-abstract class FixJavadoc @Inject constructor(@Input val task: Javadoc) : DefaultTask() {
+abstract class FixJavadoc : DefaultTask() {
+
+    @get:Input
+    abstract val javadocTask: Property<Javadoc>
 
 
     /**
@@ -40,7 +42,12 @@ abstract class FixJavadoc @Inject constructor(@Input val task: Javadoc) : Defaul
 
     @TaskAction
     fun fixJavadoc() {
-        val directory = task.destinationDir
+        if(!javadocTask.isPresent) {
+            didWork = false
+            return
+        }
+
+        val directory = javadocTask.get().destinationDir
         if (directory == null || !directory.exists()) {
             //logger.warn("Javadoc destination directory is null for task " + task.name + " in project " + task.project.name + ". Skipping.")
             didWork = false
