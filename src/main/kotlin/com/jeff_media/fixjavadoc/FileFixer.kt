@@ -18,9 +18,9 @@ class FileFixer(private val file: File) {
 
     fun fixAll() {
         document.outputSettings().prettyPrint(false)
-//        fixFieldDetails()
-//        fixConstructorDetails()
-//        fixMethodParameters()
+        fixFieldDetails()
+        fixConstructorDetails()
+        fixMethodParameters()
         fixMethodReturnTypes() // TODO: This breaks e.g. List<@NotNull String> and returns just String> instead
         file.writeText(document.html(), StandardCharsets.UTF_8)
     }
@@ -36,12 +36,13 @@ class FileFixer(private val file: File) {
     }
 
     private fun fixMethodReturnTypes() {
-        val allSignatures: Elements = document.getElementById("method-detail")?.getElementsByClass("member-signature")
-            ?: return // No fields
+        val allSignatures: Elements = document.getElementById("method-detail")?.getElementsByClass("member-signature") ?: return
         for (signature in allSignatures) {
-            println("Found signature: $signature")
+            //println("Found signature: $signature\n\n\n")
             val listOfAnnotations: List<String> = collectAnnotations(signature.getElementsByClass("annotations").first())
+            //println("List of annotations: $listOfAnnotations\n\n\n")
             val returnTypeElement: Element? = signature.getElementsByClass("return-type").first()
+            //println("Return type element: $returnTypeElement\n\n\n")
             removeDoubleAnnotations(returnTypeElement, listOfAnnotations)
         }
     }
@@ -70,26 +71,32 @@ class FileFixer(private val file: File) {
     }
 
     private fun getAnnotationRegex(annotation: String): Regex {
-        println("Getting annotation regex for $annotation")
+        //println("Getting annotation regex for $annotation")
         val escaped = Regex.escape(annotation)
-        return "<a .*?>$escaped</a> ".toRegex()
+        //println("Escaped: $escaped")
+        val retVal = "<a [^>]*?>$escaped</a> ".toRegex()
+        //println("Regex: " + retVal.pattern)
+        return retVal
     }
 
     private fun removeDoubleAnnotations(returnTypeElement: Element?, listOfAnnotations: List<String>) {
         if(returnTypeElement == null) {
             return
         }
-        println("Remove double annotation: " + returnTypeElement.html())
         var html = returnTypeElement.html()
+        //println("HTML: $html\n\n\n")
         for(annotation in listOfAnnotations) {
-            println("Found annotation: " + annotation)
+            //println("Found annotation: " + annotation + "\n\n\n")
             if(!REGEX_VALID_ANNOTATION.matches(annotation)) {
-                println("Invalid annotation: $annotation")
+                //println("Invalid annotation: $annotation")
                 continue
             } else {
-                println("Valid annotation: $annotation")
-                html = html.replace(getAnnotationRegex(annotation), "")
+                //println("Valid annotation: $annotation")
+                //println("Old HTML 1: $html\n\n\n")
+                html = html.replaceFirst(getAnnotationRegex(annotation), "")
+                //println("New HTML 2: $html\n\n\n")
                 html = html.replace("$annotation ", "")
+                //println("New HTML 3: $html\n\n\n")
                 returnTypeElement.html(html)
             }
         }
