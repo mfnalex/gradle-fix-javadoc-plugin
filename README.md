@@ -14,7 +14,7 @@ pluginManagement {
 Now you can apply the plugin in your build.gradle.kts file:
 ```kotlin
 plugins {
-    id("com.jeff-media.fix-javadoc-plugin") version("1.5")
+    id("com.jeff-media.fix-javadoc-plugin") version("1.10")
 }
 ```
 
@@ -27,27 +27,43 @@ Imagine you have the following code, using jetbrains annotations (**not** annota
 ```java
 import org.jetbrains.annotations.NotNull;
 
-/**
- * Example class
- */
-public class Example {
+public class PlaceholderAPIUtils {
 
     /**
-     * Reverses the given string
-     * @param input String to reverse
-     * @return Reversed string
+     * Applies PlaceholderAPI placeholders to a list of strings
+     *
+     * @param strings List of strings to apply placeholders to
+     * @param player  Player to apply placeholders for
+     * @return Unmodifiable list of strings with placeholders applied
      */
+    @Contract(pure = true, value = "_, _ -> new")
     @NotNull
-    public String reverseString(@NotNull String input) {
-        return new StringBuilder(input).reverse().toString();
+    public static List<@NotNull String> apply(@NotNull List<@NotNull String> strings, @Nullable OfflinePlayer player) {
+        // ...
     }
 }
 ```
 
-If you generate javadocs, the NotNull annotations appear twice in the output:
+If you generate javadocs, the annotations appear twice in the output:
 
-![img.png](img/broken.png)
+![img_2.png](img/img_2.png)
 
 Using the plugin, the doubled annotations are removed from the javadoc output:
 
-![img.png](img/fixed.png)
+![img_1.png](img/img_1.png)
+
+You can also optionally set `newLineOnMethodParameters` to false, if you don't want to have a newline between annotations and method parameters:
+
+![img.png](img/img.png)
+
+## Configuration
+```kotlin
+tasks.withType<FixJavadoc>().configureEach {
+
+    // Whether to keep a newline between annotation and method parameter (see screenshots above), default: true
+    newLineOnMethodParameters.set(true)
+
+    // Whether to keep the original, unfixed docs in a folder called "javadoc-original", default: false
+    keepOriginal.set(false) 
+}
+```

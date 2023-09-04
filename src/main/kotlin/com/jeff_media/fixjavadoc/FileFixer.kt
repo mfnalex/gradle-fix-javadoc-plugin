@@ -12,7 +12,7 @@ private val REGEX_VALID_ANNOTATION_STRING = "@[a-zA-Z0-9._]+"
 private val REGEX_VALID_ANNOTATION = REGEX_VALID_ANNOTATION_STRING.toRegex()
 private val REGEX_DOUBLE_ANNOTATION_IN_PARAMETER = "(?<annotation>(<a .*>)?${REGEX_VALID_ANNOTATION_STRING}(</a>)?)\\s*\\k<annotation>".toRegex()
 
-class FileFixer(private val file: File) {
+class FileFixer(private val file: File, private val addNewLineForMethodParams: Boolean) {
 
     private val document: Document = Jsoup.parse(file, StandardCharsets.UTF_8.name())
 
@@ -54,10 +54,15 @@ class FileFixer(private val file: File) {
     }
 
     private fun fixSignatures(allSignatures: Elements) {
+        fixSignatures(allSignatures, false)
+    }
+
+    private fun fixSignatures(allSignatures: Elements, newline: Boolean) {
         for (signature in allSignatures) {
             val parametersElement = signature.getElementsByClass("parameters").first()
             var parametersHtml: String? = parametersElement?.html() ?: continue
-            parametersHtml = parametersHtml?.replace(REGEX_DOUBLE_ANNOTATION_IN_PARAMETER, "\${annotation}")
+            val newlineChar = if (newline && addNewLineForMethodParams) "\n" else ""
+            parametersHtml = parametersHtml?.replace(REGEX_DOUBLE_ANNOTATION_IN_PARAMETER, "\${annotation}${newlineChar}")
             if (parametersHtml != null) {
                 parametersElement.html(parametersHtml)
             }
@@ -67,7 +72,7 @@ class FileFixer(private val file: File) {
     private fun fixMethodParameters() {
         val allSignatures: Elements = document.getElementById("method-detail")?.getElementsByClass("member-signature")
             ?: return // No fields
-        fixSignatures(allSignatures)
+        fixSignatures(allSignatures, true)
     }
 
     private fun getAnnotationRegex(annotation: String): Regex {
