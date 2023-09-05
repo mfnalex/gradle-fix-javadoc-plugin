@@ -19,7 +19,7 @@ class FileFixer(private val file: File, private val addNewLineForMethodParams: B
     fun fixAll() {
         document.outputSettings().prettyPrint(false)
         fixFieldDetails()
-        fixConstructorDetails()
+        fixConstructorParameters(addNewLineForMethodParams)
         fixMethodParameters(addNewLineForMethodParams)
         fixMethodReturnTypes()
         file.writeText(document.html(), StandardCharsets.UTF_8)
@@ -50,11 +50,11 @@ class FileFixer(private val file: File, private val addNewLineForMethodParams: B
         }
     }
 
-    private fun fixConstructorDetails() {
+    private fun fixConstructorParameters(addNewLineForMethodParams: Boolean) {
         val allSignatures: Elements =
             document.getElementById("constructor-detail")?.getElementsByClass("member-signature")
                 ?: return // No fields
-        fixSignatures(allSignatures)
+        fixSignatures(allSignatures, addNewLineForMethodParams)
     }
 
     private fun fixMethodParameters(addNewLineForMethodParams: Boolean) {

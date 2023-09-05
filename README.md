@@ -18,7 +18,7 @@ Now you can apply the plugin in your build.gradle.kts file:
 
 ```kotlin
 plugins {
-    id("com.jeff-media.fix-javadoc-plugin") version ("1.12")
+    id("com.jeff-media.fix-javadoc-plugin") version ("1.19")
 }
 ```
 
