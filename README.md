@@ -2,19 +2,7 @@ This is a gradle plugin to automatically remove doubled annotations caused by, f
 
 ## Usage
 
-Add my repository to your settings.gradle.kts file:
-
-```kotlin
-pluginManagement {
-    repositories {
-        maven {
-            url = uri("https://repo.jeff-media.com/public")
-        }
-    }
-}
-```
-
-Now you can apply the plugin in your build.gradle.kts file:
+The fix-javadoc-plugin is [available in the Gradle Plugin Portal](https://plugins.gradle.org/plugin/com.jeff-media.fix-javadoc-plugin).
 
 ```kotlin
 plugins {
